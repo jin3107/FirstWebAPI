@@ -55,5 +55,29 @@ namespace FirstWebAPI.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        // Tìm kiếm và Phân trang
+        public async Task<List<ProductModel>> GetProductsAsync(string search, int pageNumber, int pageSize)
+        {
+            var query = _context.Products!.AsQueryable();
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(p => p.Name!.Contains(search) || p.Description!.Contains(search));
+            }
+            var products = await query.Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            return _mapper.Map<List<ProductModel>>(products);
+        }
+
+        public async Task<int> GetTotalProductsCountAsync(string search)
+        {
+            var query = _context.Products!.AsQueryable();
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(p => p.Name!.Contains(search) || p.Description!.Contains(search));
+            }
+            return await query.CountAsync();
+        }
     }
 }

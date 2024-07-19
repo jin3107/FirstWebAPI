@@ -1,5 +1,6 @@
 ﻿using FirstWebAPI.Models;
 using FirstWebAPI.Repositories;
+using FirstWebAPI.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -11,10 +12,12 @@ namespace FirstWebAPI.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
+        private readonly IProductService _service;
         private readonly IProductRepository _repository;
 
-        public ProductsController(IProductRepository repository)
+        public ProductsController(IProductService service, IProductRepository repository)
         {
+            _service = service;
             _repository = repository;
         }
 
@@ -28,7 +31,7 @@ namespace FirstWebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Đã xảy ra lỗi khi lấy danh sách sản phẩm.", error = ex.Message });
+                return BadRequest();
             }
         }
 
@@ -42,7 +45,7 @@ namespace FirstWebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Đã xảy ra lỗi khi lấy sản phẩm.", error = ex.Message });
+                return BadRequest();
             }
         }
 
@@ -57,7 +60,7 @@ namespace FirstWebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Đã xảy ra lỗi khi thêm sản phẩm.", error = ex.Message });
+                return BadRequest();
             }
         }
 
@@ -75,7 +78,7 @@ namespace FirstWebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Đã xảy ra lỗi khi cập nhật sản phẩm.", error = ex.Message });
+                return BadRequest();
             }
         }
 
@@ -94,7 +97,21 @@ namespace FirstWebAPI.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Đã xảy ra lỗi khi xóa sản phẩm.", error = ex.Message });
+                return BadRequest();
+            }
+        }
+
+        [HttpPost("search")]
+        public async Task<IActionResult> SearchProducts([FromBody] SearchRequest request)
+        {
+            try
+            {
+                var response = await _service.SearchProductsAsync(request);
+                return Ok(response);
+            }
+            catch
+            {
+                return BadRequest();
             }
         }
     }
