@@ -29,7 +29,7 @@ namespace FirstWebAPI.Controllers
                 var products = await _repository.GetAllProductsAsync();
                 return Ok(products);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest();
             }
@@ -43,7 +43,7 @@ namespace FirstWebAPI.Controllers
                 var product = await _repository.GetProductAsync(id);
                 return product == null ? NotFound(new { message = "Không tìm thấy sản phẩm với ID này." }) : Ok(product);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest();
             }
@@ -58,7 +58,7 @@ namespace FirstWebAPI.Controllers
                 var product = await _repository.GetProductAsync(newProductId);
                 return product == null ? NotFound(new { message = "Sản phẩm không tồn tại sau khi thêm." }) : Ok(product);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest();
             }
@@ -76,7 +76,7 @@ namespace FirstWebAPI.Controllers
                 await _repository.UpdateProductAsync(id, model);
                 return Ok();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest();
             }
@@ -95,7 +95,7 @@ namespace FirstWebAPI.Controllers
                 await _repository.DeleteProductAsync(id);
                 return Ok();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest();
             }
@@ -109,7 +109,7 @@ namespace FirstWebAPI.Controllers
                 var response = await _service.SearchProductsAsync(request);
                 return Ok(response);
             }
-            catch
+            catch (Exception)
             {
                 return BadRequest();
             }
