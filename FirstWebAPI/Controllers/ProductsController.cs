@@ -29,9 +29,9 @@ namespace FirstWebAPI.Controllers
                 var products = await _repository.GetAllProductsAsync();
                 return Ok(products);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return BadRequest();
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Đã xảy ra lỗi khi đọc sản phẩm.", error = ex.Message });
             }
         }
 
@@ -43,9 +43,9 @@ namespace FirstWebAPI.Controllers
                 var product = await _repository.GetProductAsync(id);
                 return product == null ? NotFound(new { message = "Không tìm thấy sản phẩm với ID này." }) : Ok(product);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return BadRequest();
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Đã xảy ra lỗi khi tìm kiếm sản phẩm.", error = ex.Message });
             }
         }
 
@@ -58,9 +58,9 @@ namespace FirstWebAPI.Controllers
                 var product = await _repository.GetProductAsync(newProductId);
                 return product == null ? NotFound(new { message = "Sản phẩm không tồn tại sau khi thêm." }) : Ok(product);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return BadRequest();
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Đã xảy ra lỗi khi thêm sản phẩm.", error = ex.Message });
             }
         }
 
@@ -76,9 +76,9 @@ namespace FirstWebAPI.Controllers
                 await _repository.UpdateProductAsync(id, model);
                 return Ok();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return BadRequest();
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Đã xảy ra lỗi khi cập nhật sản phẩm.", error = ex.Message });
             }
         }
 
@@ -95,9 +95,9 @@ namespace FirstWebAPI.Controllers
                 await _repository.DeleteProductAsync(id);
                 return Ok();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return BadRequest();
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Đã xảy ra lỗi khi xóa sản phẩm.", error = ex.Message });
             }
         }
 
@@ -109,9 +109,9 @@ namespace FirstWebAPI.Controllers
                 var response = await _service.SearchProductsAsync(request);
                 return Ok(response);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return BadRequest();
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Đã xảy ra lỗi khi tìm kiếm sản phẩm.", error = ex.Message });
             }
         }
     }

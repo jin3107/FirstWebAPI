@@ -11,17 +11,18 @@ namespace FirstWebAPI.Services
             _repository = repository;
         }
 
-        public async Task<SearchResponse> SearchProductsAsync(SearchRequest request)
+        public async Task<ApiResponse<SearchResponse>> SearchProductsAsync(SearchRequest request)
         {
             var products = await _repository.GetProductsAsync(request.Search!, request.PageNumber, request.PageSize);
             var totalProducts = await _repository.GetTotalProductsCountAsync(request.Search!);
             var totalPages = (int)Math.Ceiling(totalProducts / (double)request.PageSize);
-            return new SearchResponse
+            var searchResponse = new SearchResponse
             {
                 TotalProducts = totalProducts,
                 TotalPages = totalPages,
                 Products = products
             };
+            return new ApiResponse<SearchResponse>(searchResponse);
         }
     }
 }
