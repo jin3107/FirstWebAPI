@@ -1,6 +1,5 @@
 ﻿using FirstWebAPI.Models;
 using FirstWebAPI.Repositories;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FirstWebAPI.Controllers
@@ -16,25 +15,37 @@ namespace FirstWebAPI.Controllers
         }
 
         [HttpPost("SignUp")]
-        public async Task<IActionResult> SignUp(SignUpModel signUpModel)
+        public async Task<IActionResult> SignUp([FromBody] SignUpModel signUpModel)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var result = await _repository.SignUpAsync(signUpModel);
             if (result.Succeeded)
             {
-                return Ok(result.Succeeded);
+                return Ok(new { Message = "User registered successfully" });
             }
-            return Unauthorized();
+
+            return BadRequest(result.Errors);
         }
 
         [HttpPost("SignIn")]
-        public async Task<IActionResult> SignIn(SignInModel signInModel)
+        public async Task<IActionResult> SignIn([FromBody] SignInModel signInModel)
         {
-            var result = await _repository.SignInAsync(signInModel);
-            if (string.IsNullOrEmpty(result))
+            if (!ModelState.IsValid)
             {
-                return Unauthorized();
+                return BadRequest(ModelState);
             }
-            return Ok(result);
+
+            var token = await _repository.SignInAsync(signInModel);
+            if (string.IsNullOrEmpty(token))
+            {
+                return Unauthorized(new { Message = "Invalid credentials" });
+            }
+
+            return Ok(new { Token = token });
         }
     }
 }
