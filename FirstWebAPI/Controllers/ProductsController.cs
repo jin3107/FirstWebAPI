@@ -1,6 +1,7 @@
 ﻿using FirstWebAPI.Models;
 using FirstWebAPI.Repositories;
 using FirstWebAPI.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -49,7 +50,9 @@ namespace FirstWebAPI.Controllers
             }
         }
 
+
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> AddNewProduct(ProductModel model)
         {
             try
@@ -65,6 +68,7 @@ namespace FirstWebAPI.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdateProduct(Guid id, ProductModel model)
         {
             if (id != model.Id)
