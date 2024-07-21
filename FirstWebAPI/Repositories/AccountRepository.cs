@@ -1,4 +1,5 @@
-﻿using FirstWebAPI.Data;
+﻿using FirstWebAPI.Common;
+using FirstWebAPI.Data;
 using FirstWebAPI.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
@@ -14,43 +15,38 @@ namespace FirstWebAPI.Repositories
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _configuration;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public AccountRepository(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration)
+        public AccountRepository(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
+            IConfiguration configuration,
+            RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
+            _roleManager = roleManager;
         }
 
         public async Task<string> SignInAsync(SignInModel model)
         {
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
-            {
-                return string.Empty;
-            }
-
-            var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, false);
-            if (!result.Succeeded)
+            var user = await _userManager.FindByEmailAsync(model.Email!);
+            if (user == null || !(await _signInManager.CheckPasswordSignInAsync(user, model.Password!, false)).Succeeded)
             {
                 return string.Empty;
             }
 
             var authClaims = new List<Claim>
             {
-                new Claim(ClaimTypes.Email, model.Email),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.Email, model.Email!),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            var authKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
-            var token = new JwtSecurityToken(
-                issuer: _configuration["JWT:ValidIssuer"],
-                audience: _configuration["JWT:ValidAudience"],
-                expires: DateTime.Now.AddMinutes(20),
-                claims: authClaims,
-                signingCredentials: new SigningCredentials(authKey, SecurityAlgorithms.HmacSha512Signature)
-            );
+            var userRoles = await _userManager.GetRolesAsync(user);
+            authClaims.AddRange(userRoles.Select(role => new Claim(ClaimTypes.Role, role)));
 
+            var token = GenerateToken(authClaims);
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
@@ -69,7 +65,34 @@ namespace FirstWebAPI.Repositories
                 UserName = model.Email
             };
 
-            return await _userManager.CreateAsync(user, model.Password!);
+            var result = await _userManager.CreateAsync(user, model.Password!);
+            if (result.Succeeded)
+            {
+                await EnsureRoleExistsAsync(AppRole.Customer);
+                await _userManager.AddToRoleAsync(user, AppRole.Customer);
+            }
+
+            return result;
+        }
+
+        private JwtSecurityToken GenerateToken(IEnumerable<Claim> authClaims)
+        {
+            var authKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]!));
+            return new JwtSecurityToken(
+                issuer: _configuration["JWT:ValidIssuer"],
+                audience: _configuration["JWT:ValidAudience"],
+                expires: DateTime.Now.AddMinutes(20),
+                claims: authClaims,
+                signingCredentials: new SigningCredentials(authKey, SecurityAlgorithms.HmacSha512Signature)
+            );
+        }
+
+        private async Task EnsureRoleExistsAsync(string role)
+        {
+            if (!await _roleManager.RoleExistsAsync(role))
+            {
+                await _roleManager.CreateAsync(new IdentityRole(role));
+            }
         }
     }
 }

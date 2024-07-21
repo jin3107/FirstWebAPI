@@ -87,6 +87,7 @@ namespace FirstWebAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteProduct(Guid id)
         {
             try
